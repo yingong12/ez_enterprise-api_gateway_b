@@ -2,8 +2,10 @@ package middleware
 
 import (
 	"api_gateway_b/http/buz_code"
+	"api_gateway_b/providers"
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"io/ioutil"
 	"log"
@@ -29,7 +31,8 @@ func GetAuthInfo(ctx *gin.Context) (info *AuthInfo, ok bool) {
 func Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		//
-		code, msg, appID, uID, err := openAuth()
+		token := c.Request.Header.Get("b_access_token")
+		code, msg, appID, uID, err := openAuth(token)
 		log.Println("进入鉴权中间件")
 		if err != nil {
 			//网络错误
@@ -38,18 +41,20 @@ func Auth() gin.HandlerFunc {
 				"msg":  "服务器内部错误",
 			})
 			c.Abort()
+			return
 		}
 		//鉴权失败
-		if code != buz_code.CODE_OK {
+		if code != int(buz_code.CODE_OK) {
 			c.JSON(http.StatusOK, gin.H{
 				"code": code,
 				"msg":  msg,
 			})
 			c.Abort()
 		}
-		log.Println("鉴权中间件解析", appID, uID)
+		log.Println("鉴权中间件解析")
 		info := &AuthInfo{
 			AppID: appID,
+			UID:   uID,
 		}
 		c.Set("auth_info", info)
 		c.Next()
@@ -64,9 +69,42 @@ func HeaderInjector() gin.HandlerFunc {
 	}
 }
 
-func openAuth() (code buz_code.Code, msg, appID, uID string, err error) {
+type BaseRsp struct {
+	Code int    `json:"code"`
+	Msg  string `json:"msg"`
+}
+type RspAuthInfo struct {
+	BaseRsp
+	Data struct {
+		UID       string `json:"uid"`       //b端用户id
+		AppID     string `json:"app_id"`    //appID
+		ExpiresAt string `json:"expire_at"` //过期时间
+
+	} `json:"data"`
+}
+
+func openAuth(token string) (code int, msg, appID, uID string, err error) {
 	//TODO mock
-	appID = "app1"
+	client := providers.HttpClientAccountService
+	req, err := http.NewRequest("GET", client.BaseURL+"/auth/check", nil)
+	req.Header.Set("b_access_token", token)
+	rsp, err := client.Do(req)
+	if err != nil {
+		return
+	}
+	if rsp.StatusCode != http.StatusOK {
+		err = errors.New("http_code not 200")
+		return
+	}
+	res := RspAuthInfo{}
+	err = json.NewDecoder(rsp.Body).Decode(&res)
+	if err != nil {
+		return
+	}
+	code = res.Code
+	msg = res.Msg
+	uID = res.Data.UID
+	appID = res.Data.AppID
 	return
 }
 

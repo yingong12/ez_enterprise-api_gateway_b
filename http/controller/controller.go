@@ -32,6 +32,8 @@ func STDWrapperRaw(handler func(*gin.Context) (RawResponse, error)) func(*gin.Co
 		ctx.Set("buz_err", err)
 		//永远200
 		ctx.Status(http.StatusOK)
+		//标记转发成功。用来区分远程错误还是网关错误
+		ctx.Header("forward_succeed", "1")
 		//write json response
 		ctx.Writer.Write(res)
 	}
