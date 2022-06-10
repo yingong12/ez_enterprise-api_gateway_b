@@ -1,3 +1,3 @@
 run:
 	go build
-	./account_service
+	./api_gateway_b

@@ -1,47 +1,47 @@
 package http
 
 import (
-	"account_service/http/controller"
+	"api_gateway_b/http/controller"
+	"api_gateway_b/http/middleware"
 
 	"github.com/gin-gonic/gin"
 )
 
+//鉴权，限流，转发请求到对应服务
 func loadRouter() (router *gin.Engine) {
 	gin.SetMode(gin.DebugMode)
 	router = gin.New()
+	//health check
+	router.GET("health", controller.Healthy)
+	//middleware
+	{
+		//鉴权中间件
+		router.Use(middleware.Auth())
+		//头部添加中间件
+		router.Use(middleware.HeaderInjector())
+		//访问日志
+		router.Use(middleware.RequestLogger())
+		//业务错误日志(controller最终抛出)
+		router.Use(middleware.ControllerErrorLogger())
+	}
 	//routes
-	router.POST("healthy", controller.Healthy)
-	//swagger
-	// router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler)) // register swagger
-	// 企业模块
-	enterprise := router.Group("/enterprises")
+	//重写
 	{
-		enterprise.GET("")         //获取企业信息
-		enterprise.PUT("/:en_id")  //更新企业信息
-		enterprise.POST("/create") //新建企业 用于O端(zy要求)
-		//TODO:单独写状态接口因为查询状态较为频繁，减少网络请求数据量. 初期可以不使用
-		enterprise.GET("/state/:en_id") //获取企业状态
-		enterprise.PUT("/state/:en_id") //更新企业状态
+		router.POST("enterprise/update", controller.STDWrapperRaw(controller.UpdateEnterprise))
+
 	}
-	//机构模块
-	group := router.Group("/groups")
+	//直接转发
 	{
-		enterprise.GET("")                                  //获取企业信息
-		group.GET("/enterprises/all", controller.GetAssets) //
+		//企业机构服务
+		router.Any("enterprises/*url", controller.ForwardCompanyService)
+		router.Any("groups/*url", controller.ForwardCompanyService)
+		router.Any("audits/*url", controller.ForwardCompanyService)
+		router.Any("valuate/*url", controller.ForwardCompanyService)
+		//账号服务
+		router.Any("auth/*url", controller.ForwardAccountService)
+		router.Any("account/*url", controller.ForwardAccountService)
+		router.Any("sms/*url", controller.ForwardAccountService)
 	}
-	//审核模块
-	audit := router.Group("audits")
-	{
-		audit.POST("")        //提交审核 （涉及图片上传）
-		audit.GET("")         //搜索审核,分页
-		audit.POST("confirm") //审核通过，打回. 同步修改企业状态
-	}
-	//评估模块
-	valuate := router.Group("valuate")
-	{
-		valuate.POST("")       //提交估值
-		valuate.GET("")        //获取估值结果
-		valuate.POST("export") //导出 同步异步？
-	}
+
 	return
 }

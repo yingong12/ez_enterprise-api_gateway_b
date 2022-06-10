@@ -1,10 +1,10 @@
-module account_service
+module api_gateway_b
 
 go 1.17
 
 require (
 	github.com/gin-gonic/gin v1.7.7
-	github.com/swaggo/gin-swagger v1.4.3
+	github.com/joho/godotenv v1.4.0
 )
 
 require (
@@ -20,7 +20,6 @@ require (
 	github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742 // indirect
 	github.com/ugorji/go/codec v1.1.7 // indirect
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 // indirect
-	golang.org/x/net v0.0.0-20220425223048-2871e0cb64e4 // indirect
-	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
+	golang.org/x/sys v0.0.0-20200116001909-b77594299b42 // indirect
+	gopkg.in/yaml.v2 v2.2.8 // indirect
 )

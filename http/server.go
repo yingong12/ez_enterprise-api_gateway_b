@@ -24,7 +24,7 @@ func (s *HttpServer) run() (err error) {
 }
 
 // Start 启动http服务器
-func Start() (err error, shutdown func()) {
+func Start(port int) (err error, shutdown func()) {
 	ctx, cancel := context.WithCancel(context.TODO())
 	shutdown = func() {
 		log.Println("Shuting down http server")
@@ -34,7 +34,7 @@ func Start() (err error, shutdown func()) {
 		ctx: ctx,
 	}
 	//TODO:先写死端口
-	server.Addr = fmt.Sprintf(":%d", 8686)
+	server.Addr = fmt.Sprintf(":%d", port)
 	server.Handler = loadRouter()
 
 	if err = server.run(); err != nil {
