@@ -4,13 +4,13 @@ type Code uint8
 
 const (
 	CODE_OK                    Code = iota //ok 0
-	CODE_SERVICE_NETWORK_ERROR             //内网服务请求错误
-	CODE_AUTH_FAILED                       //登录态校验失败 1
-	CODE_MOD_EXPIRED                       //店铺功能包过期 2
-	CODE_MOD_UNBOUGHT                      // 店铺功能包未购买（一次都没买过）3
-	CODE_UNAUTHORIZED                      //用户无权限访问该功能包 4
-	CODE_SERVER_ERROR                      //服务器内部错误 5
-	CODE_INVALID_ARGS                      //参数错误 6
+	CODE_SERVICE_NETWORK_ERROR             //内网服务请求错误 1
+	CODE_AUTH_FAILED                       //登录态校验失败 2
+	CODE_MOD_EXPIRED                       //店铺功能包过期 3
+	CODE_MOD_UNBOUGHT                      // 店铺功能包未购买（一次都没买过）4
+	CODE_UNAUTHORIZED                      //用户无权限访问该功能包 5
+	CODE_SERVER_ERROR                      //服务器内部错误 6
+	CODE_INVALID_ARGS                      //参数错误 7
 	CODE_NO_COOKIE                         //http头部缺少所需cookie
 )
 

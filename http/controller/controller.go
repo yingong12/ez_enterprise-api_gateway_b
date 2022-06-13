@@ -15,7 +15,7 @@ type STDResponse struct {
 type RawResponse []byte
 
 //标准返回并且输出错误日志
-func STDwrapperJSON(handler func(*gin.Context) (*STDResponse, error)) func(*gin.Context) {
+func STDwrapperJSON(handler func(*gin.Context) (STDResponse, error)) func(*gin.Context) {
 	return func(ctx *gin.Context) {
 		res, err := handler(ctx)
 		ctx.Set("buz_err", err)
