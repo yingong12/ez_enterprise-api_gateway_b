@@ -14,34 +14,35 @@ func loadRouter() (router *gin.Engine) {
 	//health check
 	router.GET("health", controller.Healthy)
 	//middleware
-	{
-		//鉴权中间件
-		router.Use(middleware.Auth())
-		//头部添加中间件
-		router.Use(middleware.HeaderInjector())
-		//访问日志
-		router.Use(middleware.RequestLogger())
-		//业务错误日志(controller最终抛出)
-		router.Use(middleware.ControllerErrorLogger())
-	}
+	//头部添加中间件
+	router.Use(middleware.HeaderInjector())
+	//访问日志
+	router.Use(middleware.RequestLogger())
+	//业务错误日志(controller最终抛出)
+	router.Use(middleware.ControllerErrorLogger())
 	//routes
-	//重写
+	auth := router.Group("auth")
 	{
-		router.POST("enterprise/update", controller.STDWrapperRaw(controller.UpdateEnterprise))
-
+		auth.Any("*url", controller.ForwardAccountService)
 	}
-	//直接转发
+	//
 	{
 		//企业机构服务
-		router.Any("enterprises/*url", controller.ForwardCompanyService)
+		router.Use(middleware.Auth())
+		//B端限制中间中件
+		router.Use(middleware.GuardDog)
+		router.Any("enterprise/*url", controller.ForwardCompanyService)
 		router.Any("groups/*url", controller.ForwardCompanyService)
 		router.Any("audits/*url", controller.ForwardCompanyService)
 		router.Any("valuate/*url", controller.ForwardCompanyService)
 		//账号服务
-		router.Any("auth/*url", controller.ForwardAccountService)
 		router.Any("account/*url", controller.ForwardAccountService)
 		router.Any("sms/*url", controller.ForwardAccountService)
 	}
+	//404
+	router.NoRoute(func(ctx *gin.Context) {
+		ctx.Writer.WriteString("gateway not found")
+	})
 
 	return
 }

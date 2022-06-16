@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -44,6 +45,7 @@ func Auth() gin.HandlerFunc {
 			return
 		}
 		//鉴权失败
+		fmt.Println(48, code, msg, appID, uID)
 		if code != int(buz_code.CODE_OK) {
 			c.JSON(http.StatusOK, gin.H{
 				"code": code,
@@ -51,7 +53,6 @@ func Auth() gin.HandlerFunc {
 			})
 			c.Abort()
 		}
-		log.Println("鉴权中间件解析")
 		info := &AuthInfo{
 			AppID: appID,
 			UID:   uID,
@@ -60,6 +61,45 @@ func Auth() gin.HandlerFunc {
 		c.Next()
 
 	}
+}
+
+//GuardDog 看门口，重写appid和uid
+func GuardDog(c *gin.Context) {
+	//不管GET请求
+	if c.Request.Method == "GET" {
+		c.Next()
+		return
+	}
+	v, ok := c.Get("auth_info")
+	authINFO := v.(*AuthInfo)
+	if !ok {
+		c.JSON(http.StatusOK, gin.H{
+			"code": buz_code.CODE_AUTH_FAILED,
+			"msg":  "缺少登录态",
+		})
+		c.Abort()
+		return
+	}
+	//将body里的appID替换为Authinfo的appid
+	cbody := copyBody(c)
+	m := map[string]interface{}{}
+	err := json.Unmarshal(cbody, &m)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code": buz_code.CODE_SERVER_ERROR,
+			"msg":  "看门狗错误",
+		})
+		c.Abort()
+		return
+	}
+	if _, ok := m["app_id"]; ok {
+		m["app_id"] = authINFO.AppID
+	}
+	if _, ok := m["uid"]; ok {
+		m["uid"] = authINFO.UID
+	}
+	log.Println("看门狗", m)
+	c.Next()
 }
 
 //HeaderInjector injects the header to the request
