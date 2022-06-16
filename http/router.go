@@ -24,6 +24,7 @@ func loadRouter() (router *gin.Engine) {
 	auth := router.Group("auth")
 	{
 		auth.Any("*url", controller.ForwardAccountService)
+		auth.Any("", controller.ForwardAccountService)
 	}
 	//
 	{
@@ -31,13 +32,23 @@ func loadRouter() (router *gin.Engine) {
 		router.Use(middleware.Auth())
 		//B端限制中间中件
 		router.Use(middleware.GuardDog)
-		router.Any("enterprise/*url", controller.ForwardCompanyService)
-		router.Any("groups/*url", controller.ForwardCompanyService)
-		router.Any("audits/*url", controller.ForwardCompanyService)
-		router.Any("valuate/*url", controller.ForwardCompanyService)
+		{
+			router.Any("enterprise", controller.ForwardCompanyService)
+			router.Any("group", controller.ForwardCompanyService)
+			router.Any("audit", controller.ForwardCompanyService)
+			router.Any("valuate", controller.ForwardCompanyService)
+			router.Any("group/*url", controller.ForwardCompanyService)
+			router.Any("enterprise/*url", controller.ForwardCompanyService)
+			router.Any("audit/*url", controller.ForwardCompanyService)
+			router.Any("valuate/*url", controller.ForwardCompanyService)
+		}
 		//账号服务
-		router.Any("account/*url", controller.ForwardAccountService)
-		router.Any("sms/*url", controller.ForwardAccountService)
+		{
+			router.Any("account", controller.ForwardAccountService)
+			router.Any("sms", controller.ForwardAccountService)
+			router.Any("account/*url", controller.ForwardAccountService)
+			router.Any("sms/*url", controller.ForwardAccountService)
+		}
 	}
 	//404
 	router.NoRoute(func(ctx *gin.Context) {
