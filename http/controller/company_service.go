@@ -33,7 +33,7 @@ func EnterpriseUpdate(ctx *gin.Context) (res RawResponse, err error) {
 	clientBody := &bytes.Reader{}
 	v, _ := ctx.Get("auth_info")
 	appID := v.(*middleware.AuthInfo).AppID
-	if appID == "" {
+	if appID == "" || appID[0] != 'a' {
 		ctx.JSON(200, gin.H{
 			"code": buz_code.CODE_AUTH_FAILED,
 			"msg":  "该用户还没绑定企业或机构",
@@ -82,7 +82,8 @@ func GroupUpdate(ctx *gin.Context) (res RawResponse, err error) {
 	clientBody := &bytes.Reader{}
 	v, _ := ctx.Get("auth_info")
 	appID := v.(*middleware.AuthInfo).AppID
-	if appID == "" {
+	//非企业
+	if appID == "" || appID[0] != 'g' {
 		ctx.JSON(200, gin.H{
 			"code": buz_code.CODE_AUTH_FAILED,
 			"msg":  "该用户还没绑定企业或机构",
